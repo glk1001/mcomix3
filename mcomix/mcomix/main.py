@@ -1200,5 +1200,3 @@ def set_main_window(window):
 
 def _dummy_layout():
     return layout.FiniteLayout(((1, 1),), (1, 1), (1, 1), 0, False, 0, 0)
-
-# vim: expandtab:sw=4:ts=4

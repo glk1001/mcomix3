@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-'''constants.py - Miscellaneous constants.'''
+"""constants.py - Miscellaneous constants."""
 
-import re
 import os
-import operator
 
 from mcomix import tools
 
-APPNAME = 'MComix'
-VERSION = '1.3.0.dev0'
+APPNAME = 'MComix3'
+VERSION = '1.3.1.dev0'
 
 REQUIRED_PIL_VERSION = '5.1.0'
 
@@ -45,15 +43,14 @@ FIRST_INDEX = 0
 LAST_INDEX = -1
 UNION_INDEX = -2
 ANIMATION_DISABLED = 0
-ANIMATION_NORMAL = 1 # loop as animation setting
-ANIMATION_ONCE = 1<<1 # loop only once
-ANIMATION_INF = 1<<2 # loop infinity
+ANIMATION_NORMAL = 1  # loop as animation setting
+ANIMATION_ONCE = 1 << 1  # loop only once
+ANIMATION_INF = 1 << 2  # loop infinity
 
 ZIP, RAR, RAR5, TAR, GZIP, BZIP2, XZ, PDF, SEVENZIP, LHA, ZIP_EXTERNAL, SQUASHFS = range(12)
 NORMAL_CURSOR, GRAB_CURSOR, WAIT_CURSOR, NO_CURSOR = range(4)
 LIBRARY_DRAG_EXTERNAL_ID, LIBRARY_DRAG_BOOK_ID, LIBRARY_DRAG_COLLECTION_ID = range(3)
-AUTOROTATE_NEVER, AUTOROTATE_WIDTH_90, AUTOROTATE_WIDTH_270, \
-    AUTOROTATE_HEIGHT_90, AUTOROTATE_HEIGHT_270 = range(5)
+AUTOROTATE_NEVER, AUTOROTATE_WIDTH_90, AUTOROTATE_WIDTH_270, AUTOROTATE_HEIGHT_90, AUTOROTATE_HEIGHT_270 = range(5)
 
 RESPONSE_REVERT_TO_DEFAULT = 3
 RESPONSE_REMOVE = 4
@@ -78,72 +75,70 @@ ACCEPTED_COMMENT_EXTENSIONS = ['txt', 'nfo', 'xml']
 # for mimetypes not registed to IANA
 
 ZIP_FORMATS = (
-    # https://www.iana.org/assignments/media-types/application/zip
-    ('.zip', 'application/zip'),
-    # https://www.iana.org/assignments/media-types/application/vnd.comicbook+zip
-    ('.cbz', 'application/vnd.comicbook+zip'),
+        # https://www.iana.org/assignments/media-types/application/zip
+        ('.zip', 'application/zip'),
+        # https://www.iana.org/assignments/media-types/application/vnd.comicbook+zip
+        ('.cbz', 'application/vnd.comicbook+zip'),
 )
 
 RAR_FORMATS = (
-    # https://www.iana.org/assignments/media-types/application/vnd.rar
-    ('.rar', 'application/vnd.rar'),
-    # https://www.iana.org/assignments/media-types/application/vnd.comicbook-rar
-    ('.cbr', 'application/vnd.comicbook-rar'),
+        # https://www.iana.org/assignments/media-types/application/vnd.rar
+        ('.rar', 'application/vnd.rar'),
+        # https://www.iana.org/assignments/media-types/application/vnd.comicbook-rar
+        ('.cbr', 'application/vnd.comicbook-rar'),
 )
 
 TAR_FORMATS = (
-    # not registed in IANA
-    ('.tar', 'application/x-tar'),
-    # not registed in IANA
-    ('.cbt', 'application/x-cbt'),
+        # not registed in IANA
+        ('.tar', 'application/x-tar'),
+        # not registed in IANA
+        ('.cbt', 'application/x-cbt'),
 
-    # see https://www.gnu.org/software/tar/manual/html_section/tar_68.html#auto_002dcompress
-    # and https://git.savannah.gnu.org/cgit/tar.git/commit/?id=2c06a80918019471876956eef4ef22f05c9e0571
-    # for compressed tar
+        # see https://www.gnu.org/software/tar/manual/html_section/tar_68.html#auto_002dcompress
+        # and https://git.savannah.gnu.org/cgit/tar.git/commit/?id=2c06a80918019471876956eef4ef22f05c9e0571
+        # for compressed tar
 
-    # gzip
-    ('.tar.gz',   'application/x-compressed-tar'),
-    ('.tgz',      'application/x-compressed-tar'),
-    # bzip2
-    ('.tar.bz2',  'application/x-bzip-compressed-tar'),
-    ('.tar.bz',   'application/x-bzip-compressed-tar'),
-    ('.tbz2',     'application/x-bzip-compressed-tar'),
-    ('.tbz',      'application/x-bzip-compressed-tar'),
-    ('.tb2',      'application/x-bzip-compressed-tar'),
-    # lzma
-    ('.tar.lzma', 'application/x-lzma-compressed-tar'),
-    ('.tlz',      'application/x-lzma-compressed-tar'),
-    # xz
-    ('.tar.xz',   'application/x-xz-compressed-tar'),
-    ('.txz',      'application/x-xz-compressed-tar'),
+        # gzip
+        ('.tar.gz', 'application/x-compressed-tar'),
+        ('.tgz', 'application/x-compressed-tar'),
+        # bzip2
+        ('.tar.bz2', 'application/x-bzip-compressed-tar'),
+        ('.tar.bz', 'application/x-bzip-compressed-tar'),
+        ('.tbz2', 'application/x-bzip-compressed-tar'),
+        ('.tbz', 'application/x-bzip-compressed-tar'),
+        ('.tb2', 'application/x-bzip-compressed-tar'),
+        # lzma
+        ('.tar.lzma', 'application/x-lzma-compressed-tar'),
+        ('.tlz', 'application/x-lzma-compressed-tar'),
+        # xz
+        ('.tar.xz', 'application/x-xz-compressed-tar'),
+        ('.txz', 'application/x-xz-compressed-tar'),
 )
 
 SZIP_FORMATS = (
-    # not registed in IANA
-    ('.7z',  'application/x-7z-compressed'),
-    # not registed in IANA
-    ('.cb7', 'application/x-cb7'),
+        # not registed in IANA
+        ('.7z', 'application/x-7z-compressed'),
+        # not registed in IANA
+        ('.cb7', 'application/x-cb7'),
 )
 
 LHA_FORMATS = (
-    # not registed in IANA
-    ('.lha', 'application/x-lha'),
-    # not registed in IANA
-    ('.lzh', 'application/x-lha'),
+        # not registed in IANA
+        ('.lha', 'application/x-lha'),
+        # not registed in IANA
+        ('.lzh', 'application/x-lha'),
 )
 
 PDF_FORMATS = (
-    # https://www.iana.org/assignments/media-types/application/pdf
-    ('.pdf','application/pdf'),
+        # https://www.iana.org/assignments/media-types/application/pdf
+        ('.pdf', 'application/pdf'),
 )
 
 SQUASHFS_FORMATS = (
-    # not registed in IANA
-    ('.squashfs', 'application/vnd.squashfs'),
-    ('.sqsh', 'application/vnd.squashfs'),
+        # not registed in IANA
+        ('.squashfs', 'application/vnd.squashfs'),
+        ('.sqsh', 'application/vnd.squashfs'),
 )
 
 ARCHIVE_FORMATS = ZIP_FORMATS + RAR_FORMATS + TAR_FORMATS + SQUASHFS_FORMATS
 ARCHIVE_FORMATS += SZIP_FORMATS + LHA_FORMATS + PDF_FORMATS
-
-# vim: expandtab:sw=4:ts=4
