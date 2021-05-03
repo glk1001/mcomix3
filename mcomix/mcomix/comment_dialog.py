@@ -1,14 +1,14 @@
-'''comment.py - Comments dialog.'''
+"""comment.py - Comments dialog."""
 
 import os
 from gi.repository import Gtk
 
 from mcomix import i18n
 
-class _CommentsDialog(Gtk.Dialog):
 
+class _CommentsDialog(Gtk.Dialog):
     def __init__(self, window):
-        super(_CommentsDialog, self).__init__(title=_('Comments'))
+        super(_CommentsDialog, self).__init__(title='Comments')
         self.set_transient_for(window)
         self.add_buttons(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
         self.set_resizable(True)
@@ -89,7 +89,7 @@ class _CommentsDialog(Gtk.Dialog):
 
         text = self._window.filehandler.get_comment_text(num)
         if text is None:
-            text = _('Could not read %s') % name
+            text = f'Could not read {name}'
 
         text_buffer = Gtk.TextBuffer(tag_table=self._tag_table)
         text_buffer.set_text(i18n.to_unicode(text))
@@ -101,6 +101,3 @@ class _CommentsDialog(Gtk.Dialog):
         outbox.modify_bg(Gtk.StateType.NORMAL, bg_color)
         tab_label = Gtk.Label(label=i18n.to_unicode(name))
         self._notebook.insert_page(page, tab_label, -1)
-
-
-# vim: expandtab:sw=4:ts=4

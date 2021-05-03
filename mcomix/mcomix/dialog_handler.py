@@ -1,22 +1,21 @@
-'''dialog_handler.py - Takes care of opening and closing and destroying of simple dialog windows.
+"""dialog_handler.py - Takes care of opening and closing and destroying of simple dialog windows.
    Dialog windows should only be taken care of here if they are windows that need to display
    information and then exit with no added functionality inbetween.
-'''
+"""
 
 from mcomix import about_dialog
 from mcomix import comment_dialog
 from mcomix import properties_dialog
 
-dialog_windows = {}
-dialog_windows['about-dialog'] = [None, about_dialog._AboutDialog]
-dialog_windows['comments-dialog'] = [None, comment_dialog._CommentsDialog]
-dialog_windows['properties-dialog'] = [None, properties_dialog._PropertiesDialog]
+dialog_windows = {'about-dialog': [None, about_dialog._AboutDialog],
+                  'comments-dialog': [None, comment_dialog._CommentsDialog],
+                  'properties-dialog': [None, properties_dialog._PropertiesDialog]}
+
 
 def open_dialog(action, data):
-    '''Create and display the given dialog.'''
+    """Create and display the given dialog."""
 
     window, name_of_dialog = data
-
     _dialog = dialog_windows[name_of_dialog]
 
     # if the dialog window is not created then create the window
@@ -28,14 +27,11 @@ def open_dialog(action, data):
         # if the dialog window already exists bring it to the forefront of the screen
         _dialog[0].present()
 
-def _close_dialog(action, exit_response, name_of_dialog):
 
+def _close_dialog(action, exit_response, name_of_dialog):
     _dialog = dialog_windows[name_of_dialog]
 
     # if the dialog window exists then destroy it
     if _dialog[0] is not None:
         _dialog[0].destroy()
         _dialog[0] = None
-
-
-# vim: expandtab:sw=4:ts=4
