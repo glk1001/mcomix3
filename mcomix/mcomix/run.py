@@ -207,7 +207,7 @@ def run():
     window = main.MainWindow(fullscreen = args.fullscreen, is_slideshow = args.slideshow,
                              show_library = args.library, manga_mode = args.manga,
                              double_page = args.doublepage, zoom_mode = args.zoommode,
-                             open_path = open_path, open_page = open_page)
+                             open_path = open_path)
     main.set_main_window(window)
 
     if 'win32' != sys.platform:
