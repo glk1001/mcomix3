@@ -665,11 +665,11 @@ class MainWindow(Gtk.Window):
         self.thumbnailsidebar.load_thumbnails()
         self._update_page_information()
 
-    def set_page(self, num, double_handled=False, at_bottom=False):
+    def set_page(self, num, ignore_double_pages=False, at_bottom=False):
         if num == self.imagehandler.get_current_page():
             return
 
-        if not double_handled and metadata.is_page_second_part_of_double(self.metadata.page_data, num):
+        if not ignore_double_pages and metadata.is_page_second_part_of_double(self.metadata.page_data, num):
             num -= 1
 
         self.imagehandler.set_page(num)
@@ -739,17 +739,17 @@ class MainWindow(Gtk.Window):
             new_page = number_of_pages
 
         if new_page != current_page:
-            self.set_page(new_page, double_handled=True, at_bottom=(-1 == step))
+            self.set_page(new_page, ignore_double_pages=True, at_bottom=(-1 == step))
 
     def first_page(self):
         number_of_pages = self.imagehandler.get_number_of_pages()
         if number_of_pages:
-            self.set_page(1)
+            self.set_page(1, ignore_double_pages=not prefs['default double page'])
 
     def last_page(self):
         number_of_pages = self.imagehandler.get_number_of_pages()
         if number_of_pages:
-            self.set_page(number_of_pages)
+            self.set_page(number_of_pages, ignore_double_pages=not prefs['default double page'])
 
     def page_select(self, *args):
         pageselect.Pageselector(self)
