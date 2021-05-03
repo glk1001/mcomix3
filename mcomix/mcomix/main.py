@@ -411,8 +411,7 @@ class MainWindow(Gtk.Window):
             pixbuf_count = 2 if self.displayed_double() else 1  # XXX limited to at most 2 pages
             pixbuf_list = list(self.imagehandler.get_pixbufs(pixbuf_count))
             do_not_transform = [image_tools.disable_transform(x) for x in pixbuf_list]
-            size_list = [[pixbuf.get_width(), pixbuf.get_height()]
-                         for pixbuf in pixbuf_list]
+            size_list = [[pixbuf.get_width(), pixbuf.get_height()] for pixbuf in pixbuf_list]
 
             if self.is_manga_mode:
                 orientation = constants.MANGA_ORIENTATION
@@ -424,8 +423,7 @@ class MainWindow(Gtk.Window):
             # - apply automatic rotation (size based) on whole page
             # - apply manual rotation on whole page
             if prefs['auto rotate from exif']:
-                rotation_list = [image_tools.get_implied_rotation(pixbuf)
-                                 for pixbuf in pixbuf_list]
+                rotation_list = [image_tools.get_implied_rotation(pixbuf) for pixbuf in pixbuf_list]
             else:
                 rotation_list = [0] * len(pixbuf_list)
             virtual_size = [0, 0]
@@ -434,8 +432,7 @@ class MainWindow(Gtk.Window):
                     size_list[i].reverse()
                 size = size_list[i]
                 virtual_size[distribution_axis] += size[distribution_axis]
-                virtual_size[alignment_axis] = max(virtual_size[alignment_axis],
-                                                   size[alignment_axis])
+                virtual_size[alignment_axis] = max(virtual_size[alignment_axis], size[alignment_axis])
             rotation = self._get_size_rotation(*virtual_size)
             rotation = (rotation + prefs['rotation']) % 360
             if rotation in (90, 270):
@@ -468,9 +465,8 @@ class MainWindow(Gtk.Window):
                 if dasize <= 0:
                     dasize = 1
                 zoom_dummy_size[distribution_axis] = dasize
-                scaled_sizes = self.zoom.get_zoomed_size(
-                        size_list, zoom_dummy_size,
-                        distribution_axis, do_not_transform)
+                scaled_sizes = self.zoom.get_zoomed_size(size_list, zoom_dummy_size,
+                                                         distribution_axis, do_not_transform)
                 self.layout = layout.FiniteLayout(
                         scaled_sizes, viewport_size, orientation, self._spacing,
                         expand_area, distribution_axis, alignment_axis)
@@ -484,8 +480,7 @@ class MainWindow(Gtk.Window):
                     viewport_size = ()  # start anew
 
             for i in range(pixbuf_count):
-                pixbuf_list[i] = image_tools.fit_pixbuf_to_rectangle(
-                        pixbuf_list[i], scaled_sizes[i], rotation_list[i])
+                pixbuf_list[i] = image_tools.fit_pixbuf_to_rectangle(pixbuf_list[i], scaled_sizes[i], rotation_list[i])
 
             for i in range(pixbuf_count):
                 pixbuf_list[i] = image_tools.trans_pixbuf(
@@ -623,9 +618,7 @@ class MainWindow(Gtk.Window):
             self._update_page_information()
 
         # Use first page as application icon when opening archives.
-        if (page == 1
-                and self.filehandler.archive_type is not None
-                and prefs['archive thumbnail as icon']):
+        if (page == 1 and self.filehandler.archive_type is not None and prefs['archive thumbnail as icon']):
             pixbuf = self.imagehandler.get_thumbnail(page, 48, 48)
             self.set_icon(pixbuf)
 
