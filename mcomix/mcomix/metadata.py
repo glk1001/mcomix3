@@ -67,7 +67,10 @@ def is_page_second_part_of_double(page_data: PageData, page_num: int) -> bool:
     first_of_double_run = get_previous_first_page_of_double_page_run(page_data, page_num)
     if first_of_double_run <= 0:
         return False
-    return first_of_double_run % 1 == 0
+    is_first_odd = first_of_double_run % 2 != 0
+    if is_first_odd:
+        return page_num % 2 == 0
+    return page_num % 2 != 0
 
 
 class Metadata(object):
