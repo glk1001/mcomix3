@@ -1,4 +1,4 @@
-''' i18n.py - Encoding and translation handler.'''
+""" i18n.py - Encoding and translation handler."""
 
 import gettext
 import locale
@@ -17,20 +17,24 @@ from mcomix import constants
 from mcomix import tools
 from mcomix import log
 
+ENGLISH_LANGUAGES = ('en', 'en_US', 'en_AU')
+
 # Translation instance to enable other modules to use
 # functions other than the global _() if necessary
 _translation = None
 _unicode_cache = {}
 _lock = threading.Lock()
 
+
 def to_unicode(s):
     with _lock:
         return os.path.join(*map(_to_unicode, tools.splitpath(s)))
 
+
 def _to_unicode(string):
-    '''Convert <string> to unicode. First try the default filesystem
+    """Convert <string> to unicode. First try the default filesystem
     encoding, and then fall back on some common encodings.
-    '''
+    """
     fsencoding = sys.getfilesystemencoding()
     if not isinstance(string, (bytes, bytearray)):
         string = string.encode(fsencoding, 'surrogateescape')
@@ -58,23 +62,25 @@ def _to_unicode(string):
     if newstr is None:
         newstr = string.decode('utf-8', 'replace')
 
-    _unicode_cache[string]=newstr
+    _unicode_cache[string] = newstr
     return newstr
 
+
 def to_utf8(string):
-    ''' Helper function that converts unicode objects to UTF-8 encoded
+    """ Helper function that converts unicode objects to UTF-8 encoded
     strings. Non-unicode strings are assumed to be already encoded
-    and returned as-is. '''
+    and returned as-is. """
 
     if isinstance(string, str):
         return string.encode('utf-8')
     else:
         return string
 
+
 def install_gettext():
-    ''' Initialize gettext with the correct directory that contains
+    """ Initialize gettext with the correct directory that contains
     MComix translations. This has to be done before any calls to gettext.gettext
-    have been made to ensure all strings are actually translated. '''
+    have been made to ensure all strings are actually translated. """
 
     # Add the sources' base directory to PATH to allow development without
     # explicitly installing the package.
@@ -86,7 +92,7 @@ def install_gettext():
     lang_identifiers = []
     if preferences.prefs['language'] != 'auto':
         lang = preferences.prefs['language']
-        if lang not in ('en', 'en_US'):
+        if lang not in ENGLISH_LANGUAGES:
             # .mo is not needed for english
             lang_identifiers.append(lang)
     else:
@@ -94,7 +100,7 @@ def install_gettext():
         lang = portability.get_default_locale()
         for s in gettext._expand_lang(lang):
             lang = s.split('.')[0]
-            if lang in ('en', 'en_US'):
+            if lang in ENGLISH_LANGUAGES:
                 # .mo is not needed for english
                 continue
             if lang not in lang_identifiers:
@@ -109,7 +115,7 @@ def install_gettext():
         resource_path = tools.pkg_path('messages', lang,
                                        'LC_MESSAGES', '%s.mo' % domain)
         try:
-            with open(resource_path, mode = 'rb') as fp:
+            with open(resource_path, mode='rb') as fp:
                 translation = gettext.GNUTranslations(fp)
             break
         except IOError:
@@ -122,9 +128,10 @@ def install_gettext():
     global _translation
     _translation = translation
 
+
 def get_translation():
-    ''' Returns the gettext.Translation instance that has been initialized with
-    install_gettext(). '''
+    """ Returns the gettext.Translation instance that has been initialized with
+    install_gettext(). """
 
     return _translation or gettext.NullTranslations()
 
