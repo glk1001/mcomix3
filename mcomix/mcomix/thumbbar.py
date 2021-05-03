@@ -18,6 +18,16 @@ class ThumbnailSidebar(Gtk.ScrolledWindow):
     # Thumbnail border width in pixels.
     _BORDER_SIZE = 1
 
+    def page_num_str(self, treeviewcolumn, cell_renderer, model, iter, data):
+        pyobj = model.get_value(iter, 0)
+
+        if self.get_page_num_str_func is None:
+            cell_renderer.set_property('text', str(pyobj))
+            return
+
+        cell_renderer.set_property('text', self.get_page_num_str_func(int(pyobj)))
+
+
     def __init__(self, window):
         super(ThumbnailSidebar, self).__init__()
 
@@ -35,6 +45,7 @@ class ThumbnailSidebar(Gtk.ScrolledWindow):
             self.props.overlay_scrolling = False
 
         # models - contains data
+        self.get_page_num_str_func = None
         self._thumbnail_liststore = Gtk.ListStore(int, GdkPixbuf.Pixbuf, bool)
 
         # view - responsible for laying out the columns
@@ -63,6 +74,7 @@ class ThumbnailSidebar(Gtk.ScrolledWindow):
         self._thumbnail_page_treeviewcolumn = Gtk.TreeViewColumn(None)
         self._treeview.append_column(self._thumbnail_page_treeviewcolumn)
         self._text_cellrenderer = Gtk.CellRendererText()
+        self._thumbnail_page_treeviewcolumn.set_cell_data_func(self._text_cellrenderer, self.page_num_str)
         # Right align page numbers.
         self._text_cellrenderer.set_property('xalign', 1.0)
         self._thumbnail_page_treeviewcolumn.set_sizing(Gtk.TreeViewColumnSizing.FIXED)

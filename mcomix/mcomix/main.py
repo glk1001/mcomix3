@@ -28,7 +28,7 @@ from mcomix import osd
 from mcomix import keybindings
 from mcomix import zoom
 from mcomix import bookmark_backend
-from mcomix import message_dialog
+from mcomix import metadata
 from mcomix import callback
 from mcomix.library import backend, main_dialog
 from mcomix import tools
@@ -46,6 +46,9 @@ class MainWindow(Gtk.Window):
             show_library=False, manga_mode=False, double_page=False,
             zoom_mode=None, open_path=None, open_page=1):
         super(MainWindow, self).__init__(type=Gtk.WindowType.TOPLEVEL)
+
+        self.metadata_loaded = False
+        self.metadata = metadata.Metadata()
 
         # ----------------------------------------------------------------
         # Attributes
@@ -84,6 +87,7 @@ class MainWindow(Gtk.Window):
         self.imagehandler = image_handler.ImageHandler(self)
         self.imagehandler.page_available += self._page_available
         self.thumbnailsidebar = thumbbar.ThumbnailSidebar(self)
+        self.thumbnailsidebar.get_page_num_str_func = self.get_page_num_str
 
         self.statusbar = status.Statusbar()
         self.clipboard = clipboard.Clipboard(self)
@@ -635,6 +639,7 @@ class MainWindow(Gtk.Window):
         number, count = self.filehandler.get_file_number()
         self.statusbar.set_file_number(number, count)
         self.statusbar.update()
+        self.metadata_loaded = False
 
     def _on_file_closed(self):
         self.clear()
@@ -665,9 +670,13 @@ class MainWindow(Gtk.Window):
         self.thumbnailsidebar.load_thumbnails()
         self._update_page_information()
 
-    def set_page(self, num, at_bottom=False):
+    def set_page(self, num, double_handled=False, at_bottom=False):
         if num == self.imagehandler.get_current_page():
             return
+
+        if not double_handled and metadata.is_page_second_part_of_double(self.metadata.page_data, num):
+            num -= 1
+
         self.imagehandler.set_page(num)
         self.page_changed()
         self.new_page(at_bottom=at_bottom)
@@ -712,13 +721,15 @@ class MainWindow(Gtk.Window):
         number_of_pages = self.imagehandler.get_number_of_pages()
 
         new_page = current_page + step
-        if (1 == abs(step) and
-            not single_step and
-            prefs['default double page'] and
-            prefs['double step in double page mode']):
-            if +1 == step and not self.imagehandler.get_virtual_double_page():
+        if 1 == abs(step) and \
+                not single_step and \
+                prefs['default double page'] and \
+                prefs['double step in double page mode']:
+            if +1 == step and not self.imagehandler.get_virtual_double_page() \
+                    and self.can_display_as_double_page(current_page):
                 new_page += 1
-            elif -1 == step and not self.imagehandler.get_virtual_double_page(new_page - 1):
+            elif -1 == step and not self.imagehandler.get_virtual_double_page(new_page - 1) \
+                    and self.can_display_as_double_page(new_page - 1):
                 new_page -= 1
 
         if new_page <= 0:
@@ -735,7 +746,7 @@ class MainWindow(Gtk.Window):
             new_page = number_of_pages
 
         if new_page != current_page:
-            self.set_page(new_page, at_bottom=(-1 == step))
+            self.set_page(new_page, double_handled=True, at_bottom=(-1 == step))
 
     def first_page(self):
         number_of_pages = self.imagehandler.get_number_of_pages()
@@ -955,11 +966,40 @@ class MainWindow(Gtk.Window):
         self.set_bg_color(prefs['bg colour'])
 
     def displayed_double(self):
-        '''Return True if two pages are currently displayed.'''
-        return (self.imagehandler.get_current_page() and
-                prefs['default double page'] and
-                not self.imagehandler.get_virtual_double_page() and
-                self.imagehandler.get_current_page() != self.imagehandler.get_number_of_pages())
+        '''Return True if two pages should be displayed.'''
+        cur_page = self.imagehandler.get_current_page()
+        return cur_page and \
+               prefs['default double page'] and \
+               not self.imagehandler.get_virtual_double_page() and \
+               self.can_display_as_double_page(cur_page) and \
+               cur_page != self.imagehandler.get_number_of_pages()
+
+    def can_display_as_double_page(self, page_num: int):
+        self.load_metadata()
+        return self.metadata.page_data.can_display_as_double_page(page_num)
+
+    def get_page_num_str(self, page_num: int):
+        self.load_metadata()
+        return self.metadata.page_data.get_page_display_str(page_num)
+
+    def load_metadata(self):
+        if self.metadata_loaded:
+            return
+
+        metadata_file = ''
+        for num in range(0, self.filehandler.get_number_of_comments()):
+            if os.path.basename(self.filehandler.get_comment_name(num)) != 'metadata.txt':
+                continue
+            metadata_file = self.filehandler.get_comment_name(num)
+        if not metadata_file:
+            self.metadata.clear()
+            self.metadata_loaded = True
+            return
+        if not os.path.isfile(metadata_file):
+            return  # it will hopefully be ready later
+
+        self.metadata.load(metadata_file)
+        self.metadata_loaded = True
 
     def get_visible_area_size(self):
         '''Return a 2-tuple with the width and height of the visible part
