@@ -1,18 +1,18 @@
-'''event.py - Event handling (keyboard, mouse, etc.) for the main window.
-'''
+"""event.py - Event handling (keyboard, mouse, etc.) for the main window.
+"""
 
 import urllib
+
 from gi.repository import Gdk, Gtk
 
-from mcomix.preferences import prefs
 from mcomix import constants
-from mcomix import portability
 from mcomix import keybindings
 from mcomix import openwith
+from mcomix import portability
+from mcomix.preferences import prefs
 
 
 class EventHandler(object):
-
     def __init__(self, window):
         self._window = window
 
@@ -21,13 +21,15 @@ class EventHandler(object):
         self._pressed_pointer_pos_x = 0
         self._pressed_pointer_pos_y = 0
 
+        self._drag_timer = None
+
         #: For scrolling "off the page".
         self._extra_scroll_events = 0
         #: If True, increment _extra_scroll_events before switchting pages
         self._scroll_protection = False
 
     def resize_event(self, widget, event):
-        '''Handle events from resizing and moving the main window.'''
+        """Handle events from resizing and moving the main window."""
         size = (event.width, event.height)
         if size != self._window.previous_size:
             self._window.previous_size = size
@@ -56,8 +58,8 @@ class EventHandler(object):
                 self._window.draw_image()
 
     def register_key_events(self):
-        ''' Registers keyboard events and their default binings, and hooks
-        them up with their respective callback functions. '''
+        """ Registers keyboard events and their default binings, and hooks
+        them up with their respective callback functions. """
 
         manager = keybindings.keybinding_manager(self._window)
 
@@ -235,7 +237,7 @@ class EventHandler(object):
         manager.register('minimize',
                          self._window.minimize)
         manager.register('fullscreen',
-                         lambda:self._window.actiongroup.get_action('fullscreen').set_active(True))
+                         lambda: self._window.actiongroup.get_action('fullscreen').set_active(True))
         manager.register('toggle_fullscreen',
                          self._window.actiongroup.get_action('fullscreen').activate)
         manager.register('toolbar',
@@ -259,7 +261,7 @@ class EventHandler(object):
                              self._execute_command, args=[i - 1])
 
     def key_press_event(self, widget, event, *args):
-        '''Handle key press events on the main window.'''
+        """Handle key press events on the main window."""
 
         # This is set on demand by callback functions
         self._scroll_protection = False
@@ -273,7 +275,7 @@ class EventHandler(object):
 
         keymap = Gdk.Keymap.get_default()
         code = keymap.translate_keyboard_state(
-            event.hardware_keycode, event.get_state(), event.group)
+                event.hardware_keycode, event.get_state(), event.group)
 
         if code[0]:
             keyval = code[1]
@@ -283,7 +285,7 @@ class EventHandler(object):
             # convert it to lower case and remove SHIFT from the consumed flags
             # to match how keys are registered (<Shift> + lowercase)
             if (event.get_state() & Gdk.ModifierType.SHIFT_MASK and
-                keyval != Gdk.keyval_to_lower(keyval)):
+                    keyval != Gdk.keyval_to_lower(keyval)):
                 keyval = Gdk.keyval_to_lower(keyval)
                 consumed &= ~Gdk.ModifierType.SHIFT_MASK
 
@@ -301,18 +303,15 @@ class EventHandler(object):
         # We kill the signals here for the Up, Down, Space and Enter keys,
         # or they will start fiddling with the thumbnail selector (bad).
         # ----------------------------------------------------------------
-        if (event.keyval in (Gdk.KEY_Up, Gdk.KEY_Down,
-                             Gdk.KEY_space, Gdk.KEY_KP_Enter, Gdk.KEY_KP_Up,
-                             Gdk.KEY_KP_Down, Gdk.KEY_KP_Home, Gdk.KEY_KP_End,
-                             Gdk.KEY_KP_Page_Up, Gdk.KEY_KP_Page_Down) or
-            (event.keyval == Gdk.KEY_Return and not
-             'GDK_MOD1_MASK' in event.get_state().value_names)):
-
+        if (event.keyval in (Gdk.KEY_Up, Gdk.KEY_Down, Gdk.KEY_space, Gdk.KEY_KP_Enter, Gdk.KEY_KP_Up,
+                             Gdk.KEY_KP_Down, Gdk.KEY_KP_Home, Gdk.KEY_KP_End, Gdk.KEY_KP_Page_Up,
+                             Gdk.KEY_KP_Page_Down) or (
+                event.keyval == Gdk.KEY_Return and 'GDK_MOD1_MASK' not in event.get_state().value_names)):
             self._window.stop_emission_by_name('key_press_event')
             return True
 
     def key_release_event(self, widget, event, *args):
-        ''' Handle release of keys for the main window. '''
+        """ Handle release of keys for the main window. """
 
         # ---------------------------------------------------------------
         # Unregister CTRL for scrolling only one page in double page mode
@@ -321,17 +320,17 @@ class EventHandler(object):
             self._window.imagehandler.force_single_step = False
 
     def escape_event(self):
-        ''' Determines the behavior of the ESC key. '''
+        """ Determines the behavior of the ESC key. """
         if prefs['escape quits']:
             self._window.close_program()
         else:
             self._window.actiongroup.get_action('fullscreen').set_active(False)
 
     def scroll_wheel_event(self, widget, event, *args):
-        '''Handle scroll wheel events on the main layout area. The scroll
+        """Handle scroll wheel events on the main layout area. The scroll
         wheel flips pages in best fit mode and scrolls the scrollbars
         otherwise.
-        '''
+        """
         if event.get_state() & Gdk.ModifierType.BUTTON2_MASK:
             return
 
@@ -380,7 +379,7 @@ class EventHandler(object):
                 self._window.flip_page(+1)
 
     def mouse_press_event(self, widget, event):
-        '''Handle mouse click events on the main layout area.'''
+        """Handle mouse click events on the main layout area."""
 
         if self._window.was_out_of_focus:
             return
@@ -405,15 +404,15 @@ class EventHandler(object):
             self._window.show_info_panel()
 
     def mouse_release_event(self, widget, event):
-        '''Handle mouse button release events on the main layout area.'''
+        """Handle mouse button release events on the main layout area."""
 
         self._window.cursor_handler.set_cursor_type(constants.NORMAL_CURSOR)
 
         if event.button == 1:
 
             if event.x_root == self._pressed_pointer_pos_x and \
-               event.y_root == self._pressed_pointer_pos_y and \
-               not self._window.was_out_of_focus:
+                    event.y_root == self._pressed_pointer_pos_y and \
+                    not self._window.was_out_of_focus:
 
                 # right to next, left to previous, no matter the double page mode
                 direction = 1 if event.x > widget.get_property('width') // 2 else -1
@@ -441,7 +440,7 @@ class EventHandler(object):
                 self._flip_page(-10)
 
     def mouse_move_event(self, widget, event):
-        '''Handle mouse pointer movement events.'''
+        """Handle mouse pointer movement events."""
 
         event = _get_latest_event_of_same_type(event)
 
@@ -464,8 +463,8 @@ class EventHandler(object):
                 if (new_x != event.x_root) or (new_y != event.y_root):
                     display = screen.get_display()
                     display.warp_pointer(screen, int(new_x), int(new_y))
-                    ## This might be (or might not be) necessary to avoid
-                    ## doing one warp multiple times.
+                    # This might be (or might not be) necessary to avoid
+                    # doing one warp multiple times.
                     event = _get_latest_event_of_same_type(event)
 
                 self._last_pointer_pos_x = new_x
@@ -473,14 +472,15 @@ class EventHandler(object):
             else:
                 self._last_pointer_pos_x = event.x_root
                 self._last_pointer_pos_y = event.y_root
+
             self._drag_timer = event.time
 
     def drag_n_drop_event(self, widget, context, x, y, selection, drag_id,
                           eventtime):
-        '''Handle drag-n-drop events on the main layout area.'''
+        """Handle drag-n-drop events on the main layout area."""
         # The drag source is inside MComix itself, so we ignore.
 
-        if (Gtk.drag_get_source_widget(context) is not None):
+        if Gtk.drag_get_source_widget(context) is not None:
             return
 
         uris = selection.get_uris()
@@ -498,11 +498,11 @@ class EventHandler(object):
             self._window.filehandler.open_file(paths[0])
 
     def _scroll_with_flipping(self, x, y):
-        '''Handle scrolling with the scroll wheel or the arrow keys, for which
+        """Handle scrolling with the scroll wheel or the arrow keys, for which
         the pages might be flipped depending on the preferences.  Returns True
         if able to scroll without flipping and False if a new page was flipped
         to.
-        '''
+        """
 
         self._scroll_protection = True
 
@@ -511,8 +511,8 @@ class EventHandler(object):
             return True
 
         if y > 0 or \
-           (self._window.is_manga_mode and x < 0) or \
-           (not self._window.is_manga_mode and x > 0):
+                (self._window.is_manga_mode and x < 0) or \
+                (not self._window.is_manga_mode and x > 0):
             page_flipped = self._next_page_with_protection()
         else:
             page_flipped = self._previous_page_with_protection()
@@ -520,27 +520,27 @@ class EventHandler(object):
         return not page_flipped
 
     def _scroll_down(self):
-        ''' Scrolls down. '''
+        """ Scrolls down. """
         self._scroll_with_flipping(0, prefs['number of pixels to scroll per key event'])
 
     def _scroll_up(self):
-        ''' Scrolls up. '''
+        """ Scrolls up. """
         self._scroll_with_flipping(0, -prefs['number of pixels to scroll per key event'])
 
     def _scroll_right(self):
-        ''' Scrolls right. '''
+        """ Scrolls right. """
         self._scroll_with_flipping(prefs['number of pixels to scroll per key event'], 0)
 
     def _scroll_left(self):
-        ''' Scrolls left. '''
+        """ Scrolls left. """
         self._scroll_with_flipping(-prefs['number of pixels to scroll per key event'], 0)
 
     def _smart_scroll_down(self, small_step=None):
-        ''' Smart scrolling. '''
+        """ Smart scrolling. """
         self._smart_scrolling(small_step, False)
 
     def _smart_scroll_up(self, small_step=None):
-        ''' Reversed smart scrolling. '''
+        """ Reversed smart scrolling. """
         self._smart_scrolling(small_step, True)
 
     def _smart_scrolling(self, small_step, backwards):
@@ -549,16 +549,16 @@ class EventHandler(object):
         distance = prefs['smart scroll percentage']
         if small_step is None:
             max_scroll = [distance * viewport_size[0],
-                          distance * viewport_size[1]] # 2D only
+                          distance * viewport_size[1]]  # 2D only
         else:
-            max_scroll = [small_step] * 2 # 2D only
+            max_scroll = [small_step] * 2  # 2D only
         swap_axes = constants.SWAPPED_AXES if prefs['invert smart scroll'] \
             else constants.NORMAL_AXES
         self._window.update_layout_position()
 
         # Scroll to the new position
         new_index = self._window.layout.scroll_smartly(max_scroll, backwards, swap_axes)
-        n = 2 if self._window.displayed_double() else 1 # XXX limited to at most 2 pages
+        n = 2 if self._window.displayed_double() else 1  # XXX limited to at most 2 pages
 
         if new_index == -1:
             self._previous_page_with_protection()
@@ -568,25 +568,24 @@ class EventHandler(object):
             # Update actual viewport
             self._window.update_viewport_position()
 
-
     def _next_page_with_protection(self):
-        ''' Advances to the next page. If L{_scroll_protection} is enabled,
+        """ Advances to the next page. If L{_scroll_protection} is enabled,
         this method will only advance if enough scrolling attempts have been made.
 
-        @return: True when the page was flipped.'''
+        @return: True when the page was flipped."""
 
         if not prefs['flip with wheel']:
             self._extra_scroll_events = 0
             return False
 
         if (not self._scroll_protection
-            or self._extra_scroll_events >= prefs['number of key presses before page turn'] - 1
-            or not self._window.is_scrollable()):
+                or self._extra_scroll_events >= prefs['number of key presses before page turn'] - 1
+                or not self._window.is_scrollable()):
 
             self._flip_page(1)
             return True
 
-        elif (self._scroll_protection):
+        elif self._scroll_protection:
             self._extra_scroll_events = max(1, self._extra_scroll_events + 1)
             return False
 
@@ -595,23 +594,23 @@ class EventHandler(object):
             assert False, 'Programmer is moron, incorrect assertion.'
 
     def _previous_page_with_protection(self):
-        ''' Goes back to the previous page. If L{_scroll_protection} is enabled,
+        """ Goes back to the previous page. If L{_scroll_protection} is enabled,
         this method will only go back if enough scrolling attempts have been made.
 
-        @return: True when the page was flipped.'''
+        @return: True when the page was flipped."""
 
         if not prefs['flip with wheel']:
             self._extra_scroll_events = 0
             return False
 
         if (not self._scroll_protection
-            or self._extra_scroll_events <= -prefs['number of key presses before page turn'] + 1
-            or not self._window.is_scrollable()):
+                or self._extra_scroll_events <= -prefs['number of key presses before page turn'] + 1
+                or not self._window.is_scrollable()):
 
             self._flip_page(-1)
             return True
 
-        elif (self._scroll_protection):
+        elif self._scroll_protection:
             self._extra_scroll_events = min(-1, self._extra_scroll_events - 1)
             return False
 
@@ -619,22 +618,21 @@ class EventHandler(object):
             # This path should not be reached.
             assert False, 'Programmer is moron, incorrect assertion.'
 
-
     def _flip_page(self, number_of_pages, single_step=False):
-        ''' Switches a number of pages forwards/backwards. If C{single_step} is True,
-        the page count will be advanced by only one page even in double page mode. '''
+        """ Switches a number of pages forwards/backwards. If C{single_step} is True,
+        the page count will be advanced by only one page even in double page mode. """
         self._extra_scroll_events = 0
         self._window.flip_page(number_of_pages, single_step=single_step)
 
     def _left_right_page_progress(self, number_of_pages=1):
-        ''' If number_of_pages is positive, this function advances the specified
+        """ If number_of_pages is positive, this function advances the specified
         number of pages in manga mode and goes back the same number of pages in
-        normal mode. The opposite happens for number_of_pages being negative. '''
+        normal mode. The opposite happens for number_of_pages being negative. """
         self._flip_page(-number_of_pages if self._window.is_manga_mode else number_of_pages)
 
     def _execute_command(self, cmdindex):
-        ''' Execute an external command. cmdindex should be an integer from 0 to 9,
-        representing the command that should be executed. '''
+        """ Execute an external command. cmdindex should be an integer from 0 to 9,
+        representing the command that should be executed. """
         manager = openwith.OpenWithManager()
         commands = [cmd for cmd in manager.get_commands() if not cmd.is_separator()]
         if len(commands) > cmdindex:
@@ -642,10 +640,10 @@ class EventHandler(object):
 
 
 def _get_latest_event_of_same_type(event):
-    '''Return the latest event in the event queue that is of the same type
+    """Return the latest event in the event queue that is of the same type
     as <event>, or <event> itself if no such events are in the queue. All
     events of that type will be removed from the event queue.
-    '''
+    """
     return event
     events = []
 
@@ -666,9 +664,9 @@ def _get_latest_event_of_same_type(event):
 
 
 def _valwarp(cur, maxval, minval=0, tolerance=3, extra=2):
-    ''' Helper function for warping the cursor around the screen when it
+    """ Helper function for warping the cursor around the screen when it
       comes within `tolerance` to a border (and `extra` more to avoid
-      jumping back and forth).  '''
+      jumping back and forth).  """
     if cur < minval + tolerance:
         overmove = minval + tolerance - cur
         return maxval - tolerance - overmove - extra
@@ -676,6 +674,3 @@ def _valwarp(cur, maxval, minval=0, tolerance=3, extra=2):
         overmove = tolerance - (maxval - cur)
         return minval + tolerance + overmove + extra
     return cur
-
-
-# vim: expandtab:sw=4:ts=4

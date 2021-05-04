@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''file_handler.py - File handler that takes care of opening archives and images.'''
+"""file_handler.py - File handler that takes care of opening archives and images."""
 
 import json
 import os
@@ -7,28 +7,27 @@ import re
 
 from gi.repository import Gtk
 
-from mcomix.preferences import prefs
 from mcomix import archive_extractor
 from mcomix import archive_tools
-from mcomix import image_tools
-from mcomix import tools
+from mcomix import callback
 from mcomix import constants
 from mcomix import file_provider
-from mcomix import callback
-from mcomix import log
+from mcomix import image_tools
 from mcomix import last_read_page
+from mcomix import log
 from mcomix import message_dialog
+from mcomix import tools
 from mcomix.library import backend
+from mcomix.preferences import prefs
 
 
 class FileHandler(object):
-
-    '''The FileHandler keeps track of the actual files/archives opened.
+    """The FileHandler keeps track of the actual files/archives opened.
 
     While ImageHandler takes care of pages/images, this class provides
     the raw file names for archive members and image files, extracts
     archives, and lists directories for image files.
-    '''
+    """
 
     def __init__(self, window):
         #: Indicates if files/archives are currently loaded/loading.
@@ -36,6 +35,9 @@ class FileHandler(object):
         self.file_loading = False
         #: None if current file is not an archive, or unrecognized format.
         self.archive_type = None
+
+        self.filelist = None
+        self._start_page = None
 
         #: Either path to the current archive, or first file in image list.
         #: This is B{not} the path to the currently open page.
@@ -69,7 +71,7 @@ class FileHandler(object):
         self.last_read_page.set_enabled(bool(prefs['store recent file info']))
 
     def refresh_file(self, *args, **kwargs):
-        ''' Closes the current file(s)/archive and reloads them. '''
+        """ Closes the current file(s)/archive and reloads them. """
         if self.file_loaded:
             current_file = os.path.abspath(self._window.imagehandler.get_real_path())
             if self.archive_type is not None:
@@ -79,7 +81,7 @@ class FileHandler(object):
             self.open_file(current_file, start_page, keep_fileprovider=True)
 
     def open_file(self, path, start_page=0, keep_fileprovider=False):
-        '''Open the file pointed to by <path>.
+        """Open the file pointed to by <path>.
 
         If <start_page> is not set we set the current
         page to 1 (first page), if it is set we set the current page to the
@@ -87,7 +89,7 @@ class FileHandler(object):
         last image.
 
         Return True if the file is successfully loaded.
-        '''
+        """
 
         self._close()
 
@@ -132,15 +134,15 @@ class FileHandler(object):
         return True
 
     def _archive_opened(self, image_files):
-        ''' Called once the archive has been opened and its contents listed.
-        '''
+        """ Called once the archive has been opened and its contents listed.
+        """
 
         self._window.imagehandler._base_path = self._base_path
         self._window.imagehandler.set_image_files(image_files)
         self.file_opened()
 
         if not image_files:
-            msg = _('No images in "%s"') % os.path.basename(self._current_file)
+            msg = f'No images in "{os.path.basename(self._current_file)}"'
             self._window.statusbar.set_message(msg)
             self._window.osd.show(msg)
 
@@ -159,7 +161,7 @@ class FileHandler(object):
                                                             len(image_files),
                                                             self._current_file)
                 if self._start_page or \
-                   prefs['stored dialog choices'].get('resume-from-last-read-page', False):
+                        prefs['stored dialog choices'].get('resume-from-last-read-page', False):
                     current_image_index = last_image_index
                 else:
                     # Don't switch to last page yet; since we have not asked
@@ -173,7 +175,7 @@ class FileHandler(object):
 
             if self.archive_type is not None:
                 if last_image_index != current_image_index and \
-                   self._ask_goto_last_read_page(self._current_file, last_image_index + 1):
+                        self._ask_goto_last_read_page(self._current_file, last_image_index + 1):
                     self._window.set_page(last_image_index + 1)
 
             self.write_fileinfo_file()
@@ -182,20 +184,20 @@ class FileHandler(object):
 
     @callback.Callback
     def file_opened(self):
-        ''' Called when a new set of files has successfully been opened. '''
+        """ Called when a new set of files has successfully been opened. """
         self.file_loaded = True
 
     @callback.Callback
     def file_closed(self):
-        ''' Called when the current file has been closed. '''
+        """ Called when the current file has been closed. """
         pass
 
     def close_file(self):
-        '''Close the currently opened file and its provider. '''
+        """Close the currently opened file and its provider. """
         self._close(close_provider=True)
 
     def _close(self, close_provider=False):
-        '''Run tasks for "closing" the currently opened file(s).'''
+        """Run tasks for "closing" the currently opened file(s)."""
         if self.file_loaded or self.file_loading:
             if close_provider:
                 self._file_provider = None
@@ -220,7 +222,7 @@ class FileHandler(object):
             self._tmp_dir = None
 
     def _initialize_fileprovider(self, path, keep_fileprovider):
-        ''' Creates the L{file_provider.FileProvider} for C{path}.
+        """ Creates the L{file_provider.FileProvider} for C{path}.
 
         If C{path} is a list, assumes that only the files in the list
         should be available. If C{path} is a string, assume that it is
@@ -230,7 +232,7 @@ class FileHandler(object):
         @param path: List of file names, or single file/directory as string.
         @param keep_fileprovider: If C{True}, no new provider is constructed.
         @return: If C{path} was a list, returns the first list element.
-            Otherwise, C{path} is not modified.'''
+            Otherwise, C{path} is not modified."""
 
         if isinstance(path, list) and len(path) == 0:
             # This is a programming error and does not need translation.
@@ -250,36 +252,36 @@ class FileHandler(object):
 
             return path
 
-    def _check_access(self, path):
-        ''' Checks for various error that could occur when opening C{path}.
+    @staticmethod
+    def _check_access(path):
+        """ Checks for various error that could occur when opening C{path}.
 
         @param path: Path to file that should be opened.
         @return: An appropriate error string, or C{None} if no error was found.
-        '''
+        """
         if not os.path.exists(path):
-            return _('Could not open %s: No such file.') % path
+            return f'Could not open "{path}": No such file.'
 
-        elif not os.access(path, os.R_OK):
-            return _('Could not open %s: Permission denied.') % path
+        if not os.access(path, os.R_OK):
+            return f'Could not open "{path}": Permission denied.'
 
-        else:
-            return None
+        return None
 
     def _open_archive(self, path):
-        ''' Opens the archive passed in C{path}.
+        """ Opens the archive passed in C{path}.
 
         Creates an L{archive_extractor.Extractor} and extracts all images
         found within the archive.
 
-        @return: A tuple containing C{(image_files, image_index)}. '''
+        @return: A tuple containing C{(image_files, image_index)}. """
 
         self._base_path = path
         try:
-            self._condition = self._extractor.setup(
-                self._base_path, self.archive_type)
+            self._condition = self._extractor.setup(self._base_path, self.archive_type)
         except Exception:
             self._condition = None
             raise
+
         self._tmp_dir = self._extractor.get_directory()
 
     def _listed_contents(self, archive, files):
@@ -290,9 +292,9 @@ class FileHandler(object):
 
         files = self._extractor.get_files()
         archive_images = [image for image in files
-            if image_tools.is_image_file(image)
-            # Remove MacOS meta files from image list
-            and not '__MACOSX' in os.path.normpath(image).split(os.sep)]
+                          if image_tools.is_image_file(image)
+                          # Remove MacOS meta files from image list
+                          and '__MACOSX' not in os.path.normpath(image).split(os.sep)]
 
         self._sort_archive_images(archive_images)
         image_files = [os.path.join(self._tmp_dir, f)
@@ -310,9 +312,10 @@ class FileHandler(object):
 
         self._archive_opened(image_files)
 
-    def _sort_archive_images(self, filelist):
-        ''' Sorts the image list passed in C{filelist} based on the sorting
-        preference option. '''
+    @staticmethod
+    def _sort_archive_images(filelist):
+        """ Sorts the image list passed in C{filelist} based on the sorting
+        preference option. """
 
         if prefs['sort archive by'] == constants.SORT_NAME:
             tools.alphanumeric_sort(filelist)
@@ -326,12 +329,12 @@ class FileHandler(object):
             filelist.reverse()
 
     def _get_index_for_page(self, start_page, num_of_pages, path):
-        ''' Returns the page that should be displayed for an archive.
+        """ Returns the page that should be displayed for an archive.
         @param start_page: If -1, show last page. If 0, show either first page
                            or last read page. If > 0, show C{start_page}.
         @param num_of_pages: Page count.
         @param path: Archive path.
-        '''
+        """
         if start_page < 0 and prefs['default double page']:
             current_image_index = num_of_pages - 2
         elif start_page < 0 and not prefs['default double page']:
@@ -343,39 +346,38 @@ class FileHandler(object):
 
         return min(max(0, current_image_index), num_of_pages - 1)
 
-    def _ask_goto_last_read_page(self, path, last_read_page):
-        ''' If the user read an archive previously, ask to continue from
+    def _ask_goto_last_read_page(self, path, last_read_pg):
+        """ If the user read an archive previously, ask to continue from
         that time, or from page 1. This method returns a page index, that is,
-        index + 1. '''
+        index + 1. """
 
         read_date = self.last_read_page.get_date(path)
 
         dialog = message_dialog.MessageDialog(
-            self._window,
-            flags=Gtk.DialogFlags.MODAL,
-            message_type=Gtk.MessageType.INFO,
-            buttons=Gtk.ButtonsType.YES_NO)
+                self._window,
+                flags=Gtk.DialogFlags.MODAL,
+                message_type=Gtk.MessageType.INFO,
+                buttons=Gtk.ButtonsType.YES_NO)
         dialog.set_default_response(Gtk.ResponseType.YES)
         dialog.set_should_remember_choice('resume-from-last-read-page',
-            (Gtk.ResponseType.YES, Gtk.ResponseType.NO))
+                                          (Gtk.ResponseType.YES, Gtk.ResponseType.NO))
         dialog.set_text(
-            (_('Continue reading from page %d?') % last_read_page),
-            _('You stopped reading here on %(date)s, %(time)s. '
-            'If you choose "Yes", reading will resume on page %(page)d. Otherwise, '
-            'the first page will be loaded.') % {'date': read_date.date().strftime("%x"),
-                'time': read_date.time().strftime('%X'), 'page': last_read_page})
+                f'Continue reading from page {last_read_pg}?',
+                f'You stopped reading here on{read_date.date().strftime("%x")},{read_date.time().strftime("%X")}. '
+                f'If you choose "Yes", reading will resume on page {last_read_pg}. Otherwise, '
+                f'the first page will be loaded.')
         result = dialog.run()
 
         return result == Gtk.ResponseType.YES
 
     def _open_image_files(self, filelist, image_path):
-        ''' Opens all files passed in C{filelist}.
+        """ Opens all files passed in C{filelist}.
 
         If C{image_path} is found in C{filelist}, the current page will be set
         to its index within C{filelist}.
 
         @return: Tuple of C{(image_files, image_index)}
-        '''
+        """
 
         self._base_path = self._file_provider.get_directory()
 
@@ -398,13 +400,13 @@ class FileHandler(object):
         return current_index + 1, len(file_list)
 
     def get_number_of_comments(self):
-        '''Return the number of comments in the current archive.'''
+        """Return the number of comments in the current archive."""
         return len(self._comment_files)
 
     def get_comment_text(self, num):
-        '''Return the text in comment <num> or None if comment <num> is not
+        """Return the text in comment <num> or None if comment <num> is not
         readable.
-        '''
+        """
         self._wait_on_comment(num)
         text = None
         with open(self._comment_files[num - 1], 'r') as fd:
@@ -412,20 +414,20 @@ class FileHandler(object):
         return text
 
     def get_comment_name(self, num):
-        '''Return the filename of comment <num>.'''
+        """Return the filename of comment <num>."""
         return self._comment_files[num - 1]
 
     def update_comment_extensions(self):
-        '''Update the regular expression used to filter out comments in
+        """Update the regular expression used to filter out comments in
         archives by their filename.
-        '''
+        """
         exts = '|'.join(prefs['comment extensions'])
         self._comment_re = re.compile(r'\.(%s)\s*$' % exts, re.I)
 
     def get_path_to_base(self):
-        '''Return the full path to the current base (path to archive or
+        """Return the full path to the current base (path to archive or
         image directory.)
-        '''
+        """
         if self.archive_type is not None:
             return self._base_path
 
@@ -435,28 +437,29 @@ class FileHandler(object):
         return None
 
     def get_base_filename(self):
-        '''Return the filename of the current base (archive filename or
+        """Return the filename of the current base (archive filename or
         directory name).
-        '''
+        """
         return os.path.basename(self.get_path_to_base())
 
     def get_pretty_current_filename(self):
-        '''Return a string with the name of the currently viewed file that is
+        """Return a string with the name of the currently viewed file that is
         suitable for printing.
-        '''
+        """
 
         return self._window.imagehandler.get_pretty_current_filename()
 
     def _open_next_archive(self, *args):
-        '''Open the archive that comes directly after the currently loaded
+        """Open the archive that comes directly after the currently loaded
         archive in that archive's directory listing, sorted alphabetically.
         Returns True if a new archive was opened, False otherwise.
-        '''
+        """
         if self.archive_type is not None:
 
             files = self._file_provider.list_files(file_provider.FileProvider.ARCHIVES)
             absolute_path = os.path.abspath(self._base_path)
-            if absolute_path not in files: return
+            if absolute_path not in files:
+                return
             current_index = files.index(absolute_path)
 
             for path in files[current_index + 1:]:
@@ -468,29 +471,30 @@ class FileHandler(object):
         return False
 
     def _open_previous_archive(self, *args):
-        '''Open the archive that comes directly before the currently loaded
+        """Open the archive that comes directly before the currently loaded
         archive in that archive's directory listing, sorted alphabetically.
         Returns True if a new archive was opened, False otherwise.
-        '''
+        """
         if self.archive_type is not None:
 
             files = self._file_provider.list_files(file_provider.FileProvider.ARCHIVES)
             absolute_path = os.path.abspath(self._base_path)
-            if absolute_path not in files: return
+            if absolute_path not in files:
+                return
             current_index = files.index(absolute_path)
 
             for path in reversed(files[:current_index]):
                 if archive_tools.archive_mime_type(path) is not None:
                     self._close()
-                    self.open_file(path, prefs['open first file in prev archive']-1,
+                    self.open_file(path, prefs['open first file in prev archive'] - 1,
                                    keep_fileprovider=True)
                     return True
 
         return False
 
     def open_next_directory(self, *args):
-        ''' Opens the next sibling directory of the current file, as specified by
-        file provider. Returns True if a new directory was opened and files found. '''
+        """ Opens the next sibling directory of the current file, as specified by
+        file provider. Returns True if a new directory was opened and files found. """
 
         if self._file_provider is None:
             return
@@ -516,8 +520,8 @@ class FileHandler(object):
         return True
 
     def open_previous_directory(self, *args):
-        ''' Opens the previous sibling directory of the current file, as specified by
-        file provider. Returns True if a new directory was opened and files found. '''
+        """ Opens the previous sibling directory of the current file, as specified by
+        file provider. Returns True if a new directory was opened and files found. """
 
         if self._file_provider is None:
             return
@@ -536,19 +540,19 @@ class FileHandler(object):
         files = self._file_provider.list_files(listmode)
         self._close()
         if len(files) > 0:
-            path = files[prefs['open first file in prev directory']-1]
+            path = files[prefs['open first file in prev directory'] - 1]
         else:
             path = self._file_provider.get_directory()
 
         self.open_file(path, (
-            prefs['open first file in prev archive'] or \
-            prefs['open first file in prev directory'])-1,
+                prefs['open first file in prev archive'] or
+                prefs['open first file in prev directory']) - 1,
                        keep_fileprovider=True)
         return True
 
     def file_is_available(self, filepath):
-        ''' Returns True if the file specified by "filepath" is available
-        for reading, i.e. extracted to harddisk. '''
+        """ Returns True if the file specified by "filepath" is available
+        for reading, i.e. extracted to harddisk. """
 
         if self.archive_type is not None:
             with self._condition:
@@ -565,33 +569,33 @@ class FileHandler(object):
 
     @callback.Callback
     def file_available(self, filepaths):
-        ''' Called every time a new file from the Filehandler's opened
+        """ Called every time a new file from the Filehandler's opened
         files becomes available. C{filepaths} is a list of now available files.
-        '''
+        """
         pass
 
     def _extracted_file(self, extractor, name):
-        ''' Called when the extractor finishes extracting the file at
+        """ Called when the extractor finishes extracting the file at
         <name>. This name is relative to the temporary directory
-        the files were extracted to. '''
+        the files were extracted to. """
         if not self.file_loaded:
             return
         filepath = os.path.join(extractor.get_directory(), name)
         self.file_available([filepath])
 
     def _wait_on_comment(self, num):
-        '''Block the running (main) thread until the file corresponding to
+        """Block the running (main) thread until the file corresponding to
         comment <num> has been fully extracted.
-        '''
+        """
         path = self._comment_files[num - 1]
         self._wait_on_file(path)
 
     def _wait_on_file(self, path):
-        '''Block the running (main) thread if the file <path> is from an
+        """Block the running (main) thread if the file <path> is from an
         archive and has not yet been extracted. Return when the file is
         ready.
-        '''
-        if self.archive_type == None or path == None:
+        """
+        if self.archive_type is None or path is None:
             return
 
         try:
@@ -604,9 +608,9 @@ class FileHandler(object):
             return
 
     def _ask_for_files(self, files):
-        '''Ask for <files> to be given priority for extraction.
-        '''
-        if self.archive_type == None:
+        """Ask for <files> to be given priority for extraction.
+        """
+        if self.archive_type is None:
             return
 
         with self._condition:
@@ -619,14 +623,14 @@ class FileHandler(object):
             self._extractor.set_files(extractor_files)
 
     def write_fileinfo_file(self):
-        '''Write current open file information.'''
+        """Write current open file information."""
 
         if self.file_loaded:
             path = self._window.imagehandler.get_real_path()
             if not path:
                 # no file is loaded
                 return
-            path = tools.relpath2root(path,abs_fallback=prefs['portable allow abspath'])
+            path = tools.relpath2root(path, abs_fallback=prefs['portable allow abspath'])
 
             if not path:
                 # path is None, means running in portable mode
@@ -640,8 +644,9 @@ class FileHandler(object):
             with open(constants.FILEINFO_JSON_PATH, mode='wt', encoding='utf8') as config:
                 json.dump(current_file_info, config, ensure_ascii=False, indent=2)
 
-    def read_fileinfo_file(self):
-        '''Read last loaded file info from disk.'''
+    @staticmethod
+    def read_fileinfo_file():
+        """Read last loaded file info from disk."""
 
         fileinfo = None
 
@@ -650,15 +655,14 @@ class FileHandler(object):
                 with open(constants.FILEINFO_JSON_PATH, mode='rt', encoding='utf8') as config:
                     fileinfo = json.load(config)
             except Exception as ex:
-                log.error(_('! Corrupt preferences file "%s", deleting...'),
-                          constants.FILEINFO_JSON_PATH )
-                log.info('Error was: %s', ex)
+                log.error(f'! Corrupt preferences file "{constants.FILEINFO_JSON_PATH}", deleting...')
+                log.info(f'Error was: {ex}')
                 os.remove(constants.FILEINFO_JSON_PATH)
 
         return fileinfo
 
     def update_last_read_page(self):
-        ''' Stores the currently viewed page. '''
+        """ Stores the currently viewed page. """
         if self.archive_type is None or not self.file_loaded:
             return
 
@@ -674,6 +678,3 @@ class FileHandler(object):
         except ValueError:
             # The book no longer exists in the library and has been deleted
             pass
-
-
-# vim: expandtab:sw=4:ts=4

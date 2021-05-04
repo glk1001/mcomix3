@@ -1,4 +1,4 @@
-"""bookmark_menu_item.py - A signle bookmark item."""
+"""bookmark_menu_item.py - A single bookmark item."""
 from datetime import datetime
 
 from gi.repository import Gtk

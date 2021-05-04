@@ -145,18 +145,18 @@ def run():
         wait_and_exit()
 
     except ImportError:
-        log.error('Pillow { % )} or higher is required.')
+        log.error(f'Pillow {constants.REQUIRED_PIL_VERSION} or higher is required.')
         log.error('No version of the Pillow was found on your system.')
         wait_and_exit()
 
     else:
         if pilver < constants.REQUIRED_PIL_VERSION:
             log.error('You don\'t have the required version of the Pillow installed.')
-            log.error('Installed PIL version is: {pilver}')
-            log.error('Required Pillow version is: {constants.REQUIRED_PIL_VERSION} or higher')
+            log.error(f'Installed PIL version is: {pilver}')
+            log.error(f'Required Pillow version is: {constants.REQUIRED_PIL_VERSION} or higher')
             wait_and_exit()
 
-    log.info('Image loaders: Pillow [%s], GDK [%s])', PIL.Image.__version__, GdkPixbuf.PIXBUF_VERSION)
+    log.info('Image loaders: Pillow [{PIL.Image.__version__}], GDK [{GdkPixbuf.PIXBUF_VERSION}])')
 
     if not os.path.exists(constants.DATA_DIR):
         os.makedirs(constants.DATA_DIR, 0o700)
@@ -175,7 +175,7 @@ def run():
             p = os.path.join(constants.STARTDIR, open_path[n])
             p = os.path.normpath(p)
             if not os.path.exists(p):
-                log.error(f'{p} not exists.')
+                log.error(f'"{p}" does not exist.')
                 open_path.pop(n)
                 continue
             open_path[n] = p

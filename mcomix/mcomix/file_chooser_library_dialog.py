@@ -1,19 +1,19 @@
-'''file_chooser_library_dialog.py - Custom FileChooserDialog implementations.'''
+"""file_chooser_library_dialog.py - Custom FileChooserDialog implementations."""
 
 from gi.repository import Gtk
 
-from mcomix.preferences import prefs
 from mcomix import file_chooser_base_dialog
+from mcomix.preferences import prefs
 
 _library_filechooser_dialog = None
 
-class _LibraryFileChooserDialog(file_chooser_base_dialog._BaseFileChooserDialog):
 
-    '''The filechooser dialog used when adding books to the library.'''
+class _LibraryFileChooserDialog(file_chooser_base_dialog._BaseFileChooserDialog):
+    """The filechooser dialog used when adding books to the library."""
 
     def __init__(self, library):
         super(_LibraryFileChooserDialog, self).__init__(library)
-        self.set_title(_('Add books'))
+        self.set_title('Add books')
 
         self._library = library
 
@@ -33,7 +33,7 @@ class _LibraryFileChooserDialog(file_chooser_base_dialog._BaseFileChooserDialog)
             # with it. It only happens the second time a dialog is created
             # though, which is very strange.
             self.filechooser.set_filter(filters[
-                prefs['last filter in library filechooser']])
+                                            prefs['last filter in library filechooser']])
 
         except Exception:
             self.filechooser.set_filter(filters[0])
@@ -51,9 +51,9 @@ class _LibraryFileChooserDialog(file_chooser_base_dialog._BaseFileChooserDialog)
 
     def files_chosen(self, paths):
         if paths:
-            try: # For some reason this fails sometimes (GTK+ bug?)
+            try:  # For some reason this fails sometimes (GTK+ bug?)
                 filter_index = self.filechooser.list_filters().index(
-                    self.filechooser.get_filter())
+                        self.filechooser.get_filter())
                 prefs['last filter in library filechooser'] = filter_index
 
             except Exception:
@@ -65,8 +65,9 @@ class _LibraryFileChooserDialog(file_chooser_base_dialog._BaseFileChooserDialog)
         else:
             close_library_filechooser_dialog()
 
+
 def open_library_filechooser_dialog(library):
-    '''Open the library filechooser dialog.'''
+    """Open the library filechooser dialog."""
     global _library_filechooser_dialog
 
     if _library_filechooser_dialog is None:
@@ -74,13 +75,11 @@ def open_library_filechooser_dialog(library):
     else:
         _library_filechooser_dialog.present()
 
+
 def close_library_filechooser_dialog(*args):
-    '''Close the library filechooser dialog.'''
+    """Close the library filechooser dialog."""
     global _library_filechooser_dialog
 
     if _library_filechooser_dialog is not None:
         _library_filechooser_dialog.destroy()
         _library_filechooser_dialog = None
-
-
-# vim: expandtab:sw=4:ts=4
