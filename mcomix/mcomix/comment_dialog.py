@@ -45,6 +45,9 @@ class _CommentsDialog(Gtk.Dialog):
         self._notebook.show_all()
 
     def _update_comments(self):
+        if self.vbox is None:
+            # Probably terminating program
+            return
 
         if self._notebook is not None:
             self._notebook.destroy()

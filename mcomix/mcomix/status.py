@@ -6,8 +6,8 @@ from mcomix import i18n
 from mcomix import constants
 from mcomix.preferences import prefs
 
-class Statusbar(Gtk.EventBox):
 
+class Statusbar(Gtk.EventBox):
     SPACING = 5
 
     def __init__(self):
@@ -38,23 +38,23 @@ class Statusbar(Gtk.EventBox):
 
         actiongroup = Gtk.ActionGroup(name='mcomix-statusbar')
         actiongroup.add_toggle_actions([
-            ('pagenumber', None, _('Show page numbers'), None, None,
-             self.toggle_status_visibility),
-            ('filenumber', None, _('Show file numbers'), None, None,
-             self.toggle_status_visibility),
-            ('resolution', None, _('Show resolution'), None, None,
-             self.toggle_status_visibility),
-            ('rootpath', None, _('Show path'), None, None,
-             self.toggle_status_visibility),
-            ('filename', None, _('Show filename'), None, None,
-             self.toggle_status_visibility),
-            ('filesize', None, _('Show filesize'), None, None,
-             self.toggle_status_visibility)])
+                ('pagenumber', None, 'Show page numbers', None, None,
+                 self.toggle_status_visibility),
+                ('filenumber', None, 'Show file numbers', None, None,
+                 self.toggle_status_visibility),
+                ('resolution', None, 'Show resolution', None, None,
+                 self.toggle_status_visibility),
+                ('rootpath', None, 'Show path', None, None,
+                 self.toggle_status_visibility),
+                ('filename', None, 'Show filename', None, None,
+                 self.toggle_status_visibility),
+                ('filesize', None, 'Show filesize', None, None,
+                 self.toggle_status_visibility)])
         self.ui_manager.insert_action_group(actiongroup, 0)
 
         # Hook mouse release event
         self.connect('button-release-event', self._button_released)
-        self.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK)
+        self.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK)
 
         # Default status information
         self._page_info = ''
@@ -77,8 +77,8 @@ class Statusbar(Gtk.EventBox):
 
     def set_page_number(self, page, total, this_screen):
         '''Update the page number.'''
-        p = ','.join(str(page+i) for i in range(this_screen))
-        self._page_info = '{} / {}'.format(p,total)
+        p = ','.join(str(page + i) for i in range(this_screen))
+        self._page_info = '{} / {}'.format(p, total)
 
     def get_page_number(self):
         '''Returns the bar's page information.'''
@@ -96,7 +96,7 @@ class Statusbar(Gtk.EventBox):
         ''' Returns the bar's file information.'''
         return self._file_info
 
-    def set_resolution(self, dimensions): # 2D only
+    def set_resolution(self, dimensions):  # 2D only
         '''Update the resolution data.
 
         Takes an iterable of tuples, (x, y, scale), describing the original
@@ -121,10 +121,10 @@ class Statusbar(Gtk.EventBox):
     def update(self):
         '''Set the statusbar to display the current state.'''
 
-        s = '{0:^{1}}'.format('|',Statusbar.SPACING*2+1)
+        s = '{0:^{1}}'.format('|', Statusbar.SPACING * 2 + 1)
         text = s.join(self._get_status_text())
         self.status.pop(0)
-        self.status.push(0, '{1:>{2}}{0}'.format(text,'',Statusbar.SPACING))
+        self.status.push(0, '{1:>{2}}{0}'.format(text, '', Statusbar.SPACING))
 
     def push(self, context_id, message):
         ''' Compatibility with Gtk.Statusbar. '''
@@ -139,16 +139,16 @@ class Statusbar(Gtk.EventBox):
     def _get_status_text(self):
         ''' Returns an array of text fields that should be displayed. '''
         fields = [
-            (constants.STATUS_PAGE,       self._page_info ),
-            (constants.STATUS_FILENUMBER, self._file_info ),
-            (constants.STATUS_RESOLUTION, self._resolution),
-            (constants.STATUS_PATH,       self._root      ),
-            (constants.STATUS_FILENAME,   self._filename  ),
-            (constants.STATUS_FILESIZE,   self._filesize  ),
+                (constants.STATUS_PAGE, self._page_info),
+                (constants.STATUS_FILENUMBER, self._file_info),
+                (constants.STATUS_RESOLUTION, self._resolution),
+                (constants.STATUS_PATH, self._root),
+                (constants.STATUS_FILENAME, self._filename),
+                (constants.STATUS_FILESIZE, self._filesize),
         ]
         p = prefs['statusbar fields']
 
-        return [s for c,s in filter(lambda f:f[0]&p,fields)]
+        return [s for c, s in filter(lambda f: f[0] & p, fields)]
 
     def toggle_status_visibility(self, action, *args):
         ''' Called when status entries visibility is to be changed. '''
@@ -158,12 +158,12 @@ class Statusbar(Gtk.EventBox):
             return
 
         names = {
-            'pagenumber': constants.STATUS_PAGE,
-            'resolution': constants.STATUS_RESOLUTION,
-            'rootpath':   constants.STATUS_PATH,
-            'filename':   constants.STATUS_FILENAME,
-            'filenumber': constants.STATUS_FILENUMBER,
-            'filesize':   constants.STATUS_FILESIZE,
+                'pagenumber': constants.STATUS_PAGE,
+                'resolution': constants.STATUS_RESOLUTION,
+                'rootpath': constants.STATUS_PATH,
+                'filename': constants.STATUS_FILENAME,
+                'filenumber': constants.STATUS_FILENUMBER,
+                'filesize': constants.STATUS_FILESIZE,
         }
 
         bit = names[action.get_name()]
@@ -188,15 +188,15 @@ class Statusbar(Gtk.EventBox):
 
         p = prefs['statusbar fields']
         names = {
-            'pagenumber': p & constants.STATUS_PAGE,
-            'filenumber': p & constants.STATUS_FILENUMBER,
-            'resolution': p & constants.STATUS_RESOLUTION,
-            'rootpath':   p & constants.STATUS_PATH,
-            'filename':   p & constants.STATUS_FILENAME,
-            'filesize':   p & constants.STATUS_FILESIZE,
+                'pagenumber': p & constants.STATUS_PAGE,
+                'filenumber': p & constants.STATUS_FILENUMBER,
+                'resolution': p & constants.STATUS_RESOLUTION,
+                'rootpath': p & constants.STATUS_PATH,
+                'filename': p & constants.STATUS_FILENAME,
+                'filesize': p & constants.STATUS_FILESIZE,
         }
 
-        for n,v in names.items():
+        for n, v in names.items():
             action = self.ui_manager.get_action('/Statusbar/' + n)
             action.set_active(v)
 
@@ -220,7 +220,8 @@ class TooltipStatusHelper(object):
             cid2 = widget.connect('deselect', self._on_item_deselect)
             setattr(widget, 'app::connect-ids', (cid, cid2))
 
-    def _on_disconnect_proxy(self, uimgr, action, widget):
+    @staticmethod
+    def _on_disconnect_proxy(uimgr, action, widget):
         ''' Disconnects the widget's selection handlers. '''
         cids = getattr(widget, 'app::connect-ids', ())
         for cid in cids:

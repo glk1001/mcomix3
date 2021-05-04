@@ -1,4 +1,4 @@
-'''pageselect.py - The dialog window for the page selector.'''
+"""pageselect.py - The dialog window for the page selector."""
 
 from gi.repository import Gtk
 
@@ -8,18 +8,15 @@ from mcomix import callback
 
 
 class Pageselector(Gtk.Dialog):
-
-    '''The Pageselector takes care of the popup page selector
-    '''
+    """The Pageselector takes care of the popup page selector
+    """
 
     def __init__(self, window):
         self._window = window
-        super(Pageselector, self).__init__(title=_('Go to page...'),
-                                           modal=True,
-                                           destroy_with_parent=True)
+        super(Pageselector, self).__init__(title='Go to page...', modal=True, destroy_with_parent=True)
         self.set_transient_for(window)
-        self.add_buttons(_('_Go'), Gtk.ResponseType.OK,
-                         _('_Cancel'), Gtk.ResponseType.CANCEL,)
+        self.add_buttons('_Go', Gtk.ResponseType.OK,
+                         '_Cancel', Gtk.ResponseType.CANCEL, )
         self.set_default_response(Gtk.ResponseType.OK)
         self.connect('response', self._response)
         self.set_resizable(True)
@@ -27,9 +24,9 @@ class Pageselector(Gtk.Dialog):
         self._number_of_pages = self._window.imagehandler.get_number_of_pages()
 
         self._selector_adjustment = Gtk.Adjustment(
-            value=self._window.imagehandler.get_current_page(),
-            lower=1, upper=self._number_of_pages,
-            step_increment=1, page_increment=1)
+                value=self._window.imagehandler.get_current_page(),
+                lower=1, upper=self._number_of_pages,
+                step_increment=1, page_increment=1)
 
         self._page_selector = Gtk.VScale.new(self._selector_adjustment)
         self._page_selector.set_draw_value(False)
@@ -39,16 +36,16 @@ class Pageselector(Gtk.Dialog):
         self._page_spinner.connect('changed', self._page_text_changed)
         self._page_spinner.set_activates_default(True)
         self._page_spinner.set_numeric(True)
-        self._pages_label = Gtk.Label(label=_(' of %s') % self._number_of_pages)
+        self._pages_label = Gtk.Label(label=f' of {self._number_of_pages}')
         self._pages_label.set_alignment(0, 0.5)
 
         self._image_preview = Gtk.Image()
         self._image_preview.set_size_request(
-            prefs['thumbnail size'], prefs['thumbnail size'])
+                prefs['thumbnail size'], prefs['thumbnail size'])
 
         self.connect('configure-event', self._size_changed_cb)
         self.set_size_request(prefs['pageselector width'],
-                prefs['pageselector height'])
+                              prefs['pageselector height'])
 
         # Group preview image and page selector next to each other
         preview_box = Gtk.HBox()
@@ -79,7 +76,7 @@ class Pageselector(Gtk.Dialog):
         self._window.imagehandler.page_available += self._page_available
 
     def _cb_value_changed(self, *args):
-        ''' Called whenever the spinbox value changes. Updates the preview thumbnail. '''
+        """ Called whenever the spinbox value changes. Updates the preview thumbnail. """
         page = int(self._selector_adjustment.props.value)
         if page != self._thumbnail_page:
             self._update_thumbnail(page)
@@ -94,11 +91,11 @@ class Pageselector(Gtk.Dialog):
         self._update_thumbnail(int(self._selector_adjustment.props.value))
 
     def _page_text_changed(self, control, *args):
-        ''' Called when the page selector has been changed. Used to instantly update
-            the preview thumbnail when entering page numbers by hand. '''
+        """ Called when the page selector has been changed. Used to instantly update
+            the preview thumbnail when entering page numbers by hand. """
         if control.get_text().isdigit():
             page = int(control.get_text())
-            if page > 0 and page <= self._number_of_pages:
+            if 0 < page <= self._number_of_pages:
                 control.set_value(page)
 
     def _response(self, widget, event, *args):
@@ -110,19 +107,19 @@ class Pageselector(Gtk.Dialog):
         self.destroy()
 
     def _update_thumbnail(self, page):
-        ''' Trigger a thumbnail update. '''
+        """ Trigger a thumbnail update. """
         width = self._image_preview.get_allocation().width
         height = self._image_preview.get_allocation().height
         self._thumbnail_page = page
         self._thread.apply_async(
-            self._generate_thumbnail, args=(page, width, height),
-            callback=self._generate_thumbnail_cb)
+                self._generate_thumbnail, args=(page, width, height),
+                callback=self._generate_thumbnail_cb)
 
     def _generate_thumbnail(self, page, width, height):
-        ''' Generate the preview thumbnail for the page selector.
-        A transparent image will be used if the page is not yet available. '''
+        """ Generate the preview thumbnail for the page selector.
+        A transparent image will be used if the page is not yet available. """
         return page, self._window.imagehandler.get_thumbnail(
-            page, width=width, height=height, nowait=True)
+                page, width=width, height=height, nowait=True)
 
     def _generate_thumbnail_cb(self, params):
         page, pixbuf = params

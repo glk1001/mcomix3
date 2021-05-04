@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-''' Logging module for MComix. Provides a logger 'mcomix' with a few
+""" Logging module for MComix. Provides a logger 'mcomix' with a few
 pre-configured settings. Functions in this module are redirected to
-this default logger. '''
+this default logger. """
 
 import logging
 import sys
@@ -14,17 +14,18 @@ from mcomix import i18n
 __all__ = ['debug', 'info', 'warning', 'error', 'setLevel',
            'DEBUG', 'INFO', 'WARNING', 'ERROR']
 
-levels={
-    'all':   DEBUG,
-    'debug': DEBUG,
-    'info':  INFO,
-    'warn':  WARNING,
-    'error': ERROR,
+levels = {
+        'all': DEBUG,
+        'debug': DEBUG,
+        'info': INFO,
+        'warn': WARNING,
+        'error': ERROR,
 }
+
 
 def print_old(*args, **options):
     # keep this function for reference only
-    ''' This function is supposed to replace the standard print statement.
+    """ This function is supposed to replace the standard print statement.
     Its prototype follows that of the print() function introduced in Python 2.6:
     Prints <args>, with each argument separeted by sep=' ' and ending with
     end='\n'.
@@ -32,28 +33,33 @@ def print_old(*args, **options):
     It converts any text to the encoding used by STDOUT, and replaces problematic
     characters with underscore. Prevents UnicodeEncodeErrors and similar when
     using print on non-ASCII strings, on systems not using UTF-8 as default encoding.
-    '''
+    """
 
     args = [i18n.to_unicode(val) for val in args]
 
-    if 'sep' in options: sep = options['sep']
-    else: sep = ' '
-    if 'end' in options: end = options['end']
-    else: end = '\n'
+    if 'sep' in options:
+        sep = options['sep']
+    else:
+        sep = ' '
+    if 'end' in options:
+        end = options['end']
+    else:
+        end = '\n'
 
-    def print_generic(text):
-        if text:
+    def print_generic(txt):
+        if txt:
             if (sys.stdout and
-                hasattr(sys.stdout, 'encoding') and
-                sys.stdout.encoding is not None):
+                    hasattr(sys.stdout, 'encoding') and
+                    sys.stdout.encoding is not None):
                 encoding = sys.stdout.encoding
             else:
                 encoding = locale.getpreferredencoding() or sys.getfilesystemencoding()
 
-            sys.stdout.write(text)
+            sys.stdout.write(txt)
 
-    def print_win32(text):
-        if not text: return
+    def print_win32(txt):
+        if not txt:
+            return
 
         import ctypes
         INVALID_HANDLE_VALUE, STD_OUTPUT_HANDLE = -1, -11
@@ -61,9 +67,9 @@ def print_old(*args, **options):
         if outhandle != INVALID_HANDLE_VALUE and outhandle:
             chars_written = ctypes.c_int(0)
             ctypes.windll.kernel32.WriteConsoleW(outhandle,
-                text, len(text), ctypes.byref(chars_written), None)
+                                                 txt, len(txt), ctypes.byref(chars_written), None)
         else:
-            print_generic(text)
+            print_generic(txt)
 
     print_function = sys.platform == 'win32' and print_win32 or print_generic
     if len(args) > 0:
@@ -75,11 +81,13 @@ def print_old(*args, **options):
 
     print_function(end)
 
-def print_(*args,**kwargs):
-    return print(*map(i18n.to_unicode,args),**kwargs)
+
+def print_(*args, **kwargs):
+    return print(*map(i18n.to_unicode, args), **kwargs)
+
 
 class PrintHandler(logging.Handler):
-    ''' Handler using L{print_} to output messages. '''
+    """ Handler using L{print_} to output messages. """
 
     def __init__(self):
         super(PrintHandler, self).__init__()
@@ -87,14 +95,15 @@ class PrintHandler(logging.Handler):
     def emit(self, record):
         print_(self.format(record))
 
+
 # Set up default logger.
 __logger = logging.getLogger('mcomix')
 __logger.setLevel(WARNING)
 if not __logger.hasHandlers():
     __handler = PrintHandler()
     __handler.setFormatter(logging.Formatter(
-        '%(asctime)s [%(threadName)s] %(levelname)s: %(message)s',
-        '%H:%M:%S'))
+            '%(asctime)s [%(threadName)s] %(levelname)s: %(message)s',
+            '%H:%M:%S'))
     __logger.addHandler(__handler)
 
 # The following functions direct all input to __logger.
@@ -104,6 +113,5 @@ info = __logger.info
 warning = __logger.warning
 error = __logger.error
 setLevel = __logger.setLevel
-
 
 # vim: expandtab:sw=4:ts=4

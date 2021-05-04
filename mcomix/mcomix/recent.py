@@ -1,4 +1,4 @@
-'''recent.py - Recent files handler.'''
+"""recent.py - Recent files handler."""
 
 import urllib
 import itertools
@@ -14,6 +14,7 @@ from mcomix import portability
 from mcomix import archive_tools
 from mcomix import image_tools
 from mcomix import log
+
 
 class RecentFilesMenu(Gtk.RecentChooserMenu):
 
@@ -35,7 +36,7 @@ class RecentFilesMenu(Gtk.RecentChooserMenu):
         supported_formats.update(archive_tools.get_supported_formats())
         for name in sorted(supported_formats):
             mime_types, extensions = supported_formats[name]
-            patterns = ['*'+ext for ext in extensions]
+            patterns = ['*' + ext for ext in extensions]
             for mime in mime_types:
                 rfilter.add_mime_type(mime)
             for pat in patterns:
@@ -53,7 +54,7 @@ class RecentFilesMenu(Gtk.RecentChooserMenu):
             self.remove(path)
 
     def count(self):
-        ''' Returns the amount of stored entries. '''
+        """ Returns the amount of stored entries. """
         return len(self._manager.get_items())
 
     def add(self, path):
@@ -75,11 +76,10 @@ class RecentFilesMenu(Gtk.RecentChooserMenu):
             pass
 
     def remove_all(self):
-        ''' Removes all entries to recently opened files. '''
+        """ Removes all entries to recently opened files. """
         try:
             self._manager.purge_items()
         except GObject.GError as error:
             log.debug(error)
-
 
 # vim: expandtab:sw=4:ts=4

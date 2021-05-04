@@ -618,7 +618,7 @@ class MainWindow(Gtk.Window):
             self._update_page_information()
 
         # Use first page as application icon when opening archives.
-        if (page == 1 and self.filehandler.archive_type is not None and prefs['archive thumbnail as icon']):
+        if page == 1 and self.filehandler.archive_type is not None and prefs['archive thumbnail as icon']:
             pixbuf = self.imagehandler.get_thumbnail(page, 48, 48)
             self.set_icon(pixbuf)
 

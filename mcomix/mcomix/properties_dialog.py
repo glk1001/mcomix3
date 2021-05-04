@@ -3,6 +3,7 @@
 import os
 import time
 import stat
+
 try:
     import pwd
 except ImportError:
@@ -16,11 +17,12 @@ from mcomix import properties_page
 from mcomix import strings
 from mcomix import tools
 
+
 class _PropertiesDialog(Gtk.Dialog):
 
     def __init__(self, window):
 
-        super(_PropertiesDialog, self).__init__(title=_('Properties'))
+        super(_PropertiesDialog, self).__init__(title='Properties')
         self.set_transient_for(window)
         self.add_buttons(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
         self._window = window
@@ -35,9 +37,9 @@ class _PropertiesDialog(Gtk.Dialog):
         self._image_page = properties_page._Page()
 
         self._notebook.append_page(
-            self._archive_page, Gtk.Label(label=_('Archive')))
+                self._archive_page, Gtk.Label(label='Archive'))
         self._notebook.append_page(
-            self._image_page, Gtk.Label(label=_('Image')))
+                self._image_page, Gtk.Label(label='Image'))
 
         self._update_archive_page()
         self._window.page_changed += self._on_page_change
@@ -71,7 +73,7 @@ class _PropertiesDialog(Gtk.Dialog):
                 self._notebook.detach_tab(page)
             return
         if self._notebook.get_n_pages() == 1:
-            self._notebook.insert_page(page, Gtk.Label(label=_('Archive')), 0)
+            self._notebook.insert_page(page, Gtk.Label(label='Archive'), 0)
         # In case it's not ready yet, bump the cover extraction
         # in front of the queue.
         path = window.imagehandler.get_path_to_page(1)
@@ -82,10 +84,9 @@ class _PropertiesDialog(Gtk.Dialog):
         page.set_filename(filename)
         path = window.filehandler.get_path_to_base()
         main_info = (
-            _('%d pages') % window.imagehandler.get_number_of_pages(),
-            _('%d comments') %
-                window.filehandler.get_number_of_comments(),
-            strings.ARCHIVE_DESCRIPTIONS[window.filehandler.archive_type]
+                f'{window.imagehandler.get_number_of_pages()} pages',
+                f'{window.filehandler.get_number_of_comments()} comments',
+                strings.ARCHIVE_DESCRIPTIONS[window.filehandler.archive_type]
         )
         page.set_main_info(main_info)
         self._update_page_secondary_info(page, path)
@@ -103,8 +104,8 @@ class _PropertiesDialog(Gtk.Dialog):
         page.set_filename(filename)
         width, height = window.imagehandler.get_size()
         main_info = (
-            '%dx%d px' % (width, height),
-            window.imagehandler.get_mime_name(),
+                '%dx%d px' % (width, height),
+                window.imagehandler.get_mime_name(),
         )
         page.set_main_info(main_info)
         self._update_page_secondary_info(page, path)
@@ -116,9 +117,9 @@ class _PropertiesDialog(Gtk.Dialog):
         thumb = self._window.imagehandler.get_thumbnail(page_number, width=128, height=128)
         page.set_thumbnail(thumb)
 
-    def _update_page_secondary_info(self, page, location):
-        secondary_info = [
-            (_('Location'), i18n.to_unicode(os.path.dirname(location))),
+    @staticmethod
+    def _update_page_secondary_info(page, location):
+        secondary_info = [('Location', i18n.to_unicode(os.path.dirname(location))),
         ]
         try:
             stats = os.stat(location)
@@ -127,14 +128,10 @@ class _PropertiesDialog(Gtk.Dialog):
             return
         uid = str(stats.st_uid) if pwd is None else pwd.getpwuid(stats.st_uid).pw_name
         secondary_info.extend((
-            (_('Size'), tools.format_byte_size(stats.st_size)),
-            (_('Accessed'), time.strftime('%Y-%m-%d, %H:%M:%S',
-            time.localtime(stats.st_atime))),
-            (_('Modified'), time.strftime('%Y-%m-%d, %H:%M:%S',
-            time.localtime(stats.st_mtime))),
-            (_('Permissions'), oct(stat.S_IMODE(stats.st_mode))),
-            (_('Owner'), uid)
+                ('Size', tools.format_byte_size(stats.st_size)),
+                ('Accessed', time.strftime('%Y-%m-%d, %H:%M:%S', time.localtime(stats.st_atime))),
+                ('Modified', time.strftime('%Y-%m-%d, %H:%M:%S', time.localtime(stats.st_mtime))),
+                ('Permissions', oct(stat.S_IMODE(stats.st_mode))),
+                ('Owner', uid)
         ))
         page.set_secondary_info(secondary_info)
-
-# vim: expandtab:sw=4:ts=4

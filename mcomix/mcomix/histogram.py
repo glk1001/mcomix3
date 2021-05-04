@@ -1,4 +1,4 @@
-'''histogram.py - Draw histograms (RGB) from pixbufs.'''
+"""histogram.py - Draw histograms (RGB) from pixbufs."""
 
 import PIL.Image as Image
 import PIL.ImageDraw as ImageDraw
@@ -6,8 +6,9 @@ import PIL.ImageOps as ImageOps
 
 from mcomix import image_tools
 
+
 def draw_histogram(pixbuf, height=170, fill=170, text=True):
-    '''Draw a histogram from <pixbuf> and return it as another pixbuf.
+    """Draw a histogram from <pixbuf> and return it as another pixbuf.
 
     The returned prixbuf will be 262x<height> px.
 
@@ -16,7 +17,7 @@ def draw_histogram(pixbuf, height=170, fill=170, text=True):
 
     If <text> is True a label with the maximum pixel value will be added to
     one corner.
-    '''
+    """
     im = Image.new('RGB', (258, height - 4), (30, 30, 30))
     hist_data = image_tools.pixbuf_to_pil(pixbuf).histogram()
     maximum = max(hist_data[:768] + [1])
@@ -34,22 +35,22 @@ def draw_histogram(pixbuf, height=170, fill=170, text=True):
             im_data.putpixel((x + 1, height - 5 - y), (r_px, g_px, b_px))
     # Draw the outlines
     for x in range(1, 256):
-        for y in list(range(r[x-1] + 1, r[x] + 1)) + [r[x]] * (r[x] != 0):
+        for y in list(range(r[x - 1] + 1, r[x] + 1)) + [r[x]] * (r[x] != 0):
             r_px, g_px, b_px = im_data.getpixel((x + 1, height - 5 - y))
             im_data.putpixel((x + 1, height - 5 - y), (255, g_px, b_px))
-        for y in range(r[x] + 1, r[x-1] + 1):
+        for y in range(r[x] + 1, r[x - 1] + 1):
             r_px, g_px, b_px = im_data.getpixel((x, height - 5 - y))
             im_data.putpixel((x, height - 5 - y), (255, g_px, b_px))
-        for y in list(range(g[x-1] + 1, g[x] + 1)) + [g[x]] * (g[x] != 0):
+        for y in list(range(g[x - 1] + 1, g[x] + 1)) + [g[x]] * (g[x] != 0):
             r_px, g_px, b_px = im_data.getpixel((x + 1, height - 5 - y))
             im_data.putpixel((x + 1, height - 5 - y), (r_px, 255, b_px))
-        for y in range(g[x] + 1, g[x-1] + 1):
+        for y in range(g[x] + 1, g[x - 1] + 1):
             r_px, g_px, b_px = im_data.getpixel((x, height - 5 - y))
             im_data.putpixel((x, height - 5 - y), (r_px, 255, b_px))
-        for y in list(range(b[x-1] + 1, b[x] + 1)) + [b[x]] * (b[x] != 0):
+        for y in list(range(b[x - 1] + 1, b[x] + 1)) + [b[x]] * (b[x] != 0):
             r_px, g_px, b_px = im_data.getpixel((x + 1, height - 5 - y))
             im_data.putpixel((x + 1, height - 5 - y), (r_px, g_px, 255))
-        for y in list(range(b[x] + 1, b[x-1] + 1)):
+        for y in list(range(b[x] + 1, b[x - 1] + 1)):
             r_px, g_px, b_px = im_data.getpixel((x, height - 5 - y))
             im_data.putpixel((x, height - 5 - y), (r_px, g_px, 255))
     if text:
@@ -60,6 +61,5 @@ def draw_histogram(pixbuf, height=170, fill=170, text=True):
     im = ImageOps.expand(im, 1, (80, 80, 80))
     im = ImageOps.expand(im, 1, (0, 0, 0))
     return image_tools.pil_to_pixbuf(im)
-
 
 # vim: expandtab:sw=4:ts=4
