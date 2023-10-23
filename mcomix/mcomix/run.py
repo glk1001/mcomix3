@@ -3,6 +3,8 @@ import os
 import signal
 import sys
 
+from pkg_resources import parse_version as version
+
 if __name__ == '__main__':
     print('PROGRAM TERMINATED', file=sys.stderr)
     print('Please do not run this script directly! Use mcomixstarter.py instead.', file=sys.stderr)
@@ -150,7 +152,7 @@ def run():
         wait_and_exit()
 
     else:
-        if pilver < constants.REQUIRED_PIL_VERSION:
+        if version(pilver) < version(constants.REQUIRED_PIL_VERSION):
             log.error('You don\'t have the required version of the Pillow installed.')
             log.error(f'Installed PIL version is: {pilver}')
             log.error(f'Required Pillow version is: {constants.REQUIRED_PIL_VERSION} or higher')
